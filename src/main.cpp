@@ -1,4 +1,4 @@
-#include "HashDetector.h"
+#include "include\HashcatExecutor.h"
 #include "include\FileHandler.h"
 #include "include\HashDetector.h"
 #include <iostream>
