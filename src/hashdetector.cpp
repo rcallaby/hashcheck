@@ -1,4 +1,4 @@
-#include "include\HashcatExecutor.h"
+#include "HashcatExecutor.h"
 
 HashDetector::HashDetector() {
     // Initialize hash types with characteristics and hashcat modes

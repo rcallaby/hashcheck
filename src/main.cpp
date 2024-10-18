@@ -1,6 +1,6 @@
-#include "include\HashcatExecutor.h"
-#include "include\FileHandler.h"
-#include "include\HashDetector.h"
+#include "HashcatExecutor.h"
+#include "FileHandler.h"
+#include "HashDetector.h"
 #include <iostream>
 
 class HashcatCracker {
