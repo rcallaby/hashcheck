@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -std=c++17 -Iinclude
+CXXFLAGS = -std=c++17 -I./include
 LDFLAGS = -lnlohmann_json
 
 SRC_DIR = src
@@ -8,7 +8,7 @@ BIN_DIR = bin
 
 SOURCES = $(wildcard $(SRC_DIR)/*.cpp)
 OBJECTS = $(SOURCES:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
-TARGET = $(BIN_DIR)/hash_detector
+TARGET = $(BIN_DIR)/hashcheck
 
 all: $(TARGET)
 

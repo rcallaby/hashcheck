@@ -4,7 +4,7 @@
 
 using json = nlohmann::json;
 
-std::string HashcatExecutor::generateHashcatCommand(int hashcatMode, const json& config) {
+std::string HashcatExecutor::generateHashcatCommand(int hashcatMode, const json& config, const std::string& hash) {
     if (hashcatMode == -1) {
         return "No valid hashcat mode for detected hash type.";
     }
@@ -14,7 +14,8 @@ std::string HashcatExecutor::generateHashcatCommand(int hashcatMode, const json&
     std::string additionalOptions = config.contains("options") ? config["options"].get<std::string>() : "";
     std::string hashcatPath = config.contains("hashcat_path") ? config["hashcat_path"].get<std::string>() : "hashcat";
 
-    return hashcatPath + " -m " + std::to_string(hashcatMode) + " <hash_file> " + wordlist + " " + additionalOptions;
+    // Construct the hashcat command with the actual hash
+    return hashcatPath + " -m " + std::to_string(hashcatMode) + " '" + hash + "' " + wordlist + " " + additionalOptions;
 }
 
 void HashcatExecutor::executeHashcatCommand(const std::string& command) {

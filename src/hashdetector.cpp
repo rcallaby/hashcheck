@@ -1,4 +1,4 @@
-#include "HashcatExecutor.h"
+#include "HashDetector.h"
 
 HashDetector::HashDetector() {
     // Initialize hash types with characteristics and hashcat modes
@@ -22,18 +22,21 @@ HashDetector::HashDetector() {
 }
 
 std::string HashDetector::detectHashType(const std::string& hash, int &hashcatMode) {
+    // Loop through all known hash types
     for (const auto& hashType : hashTypes) {
         if (hash.length() == hashType.length) {
+            // Check prefix if defined
             if (!hashType.prefix.empty() && hash.rfind(hashType.prefix, 0) == 0) {
                 hashcatMode = hashType.hashcatMode;
-                return hashType.name;  // Prefix match found
+                return hashType.name;
             }
+            // Check regex pattern match
             if (std::regex_match(hash, hashType.pattern)) {
                 hashcatMode = hashType.hashcatMode;
-                return hashType.name;  // Regex pattern match found
+                return hashType.name;
             }
         }
     }
     hashcatMode = -1;
-    return "Unknown";  // No match found
+    return "Unknown";
 }
