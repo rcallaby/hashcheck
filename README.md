@@ -21,7 +21,7 @@ In addition to its primary functionalities, Hashcheck is built with extensibilit
 
 ### Using command line input
 ```
-./bin/hash_detector -i e99a18c428cb38d5f260853678922e03 -c config.json
+./bin/hashcheck -i e99a18c428cb38d5f260853678922e03 -c config.json
 ```
 
 ### Using File Input
@@ -29,5 +29,5 @@ In addition to its primary functionalities, Hashcheck is built with extensibilit
 If you have a file hash.txt containing a SHA256 hash, you can run:
 
 ```
-./bin/hash_detector -f hash.txt -c config.json
+./bin/hashcheck -f hash.txt -c config.json
 ```
