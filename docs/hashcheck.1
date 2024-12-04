@@ -1,0 +1,49 @@
+.TH HASHCHECK 1 "December 2024" "1.0.0" "HASHCHECK MANUAL"
+.SH NAME
+hashcheck \- A password hash type detection and cracking tool
+.SH SYNOPSIS
+.B hashcheck
+[\fIoptions\fR]
+.SH DESCRIPTION
+hashcheck is a command-line utility for detecting hash types and cracking passwords using hashcat. 
+
+It can automatically detect the hash type, pass the correct argument to hashcat, and support custom configurations via a JSON file.
+
+.SH OPTIONS
+.TP
+\fB-h, --help\fR
+Show help message and exit.
+.TP
+\fB-f, --file\fR \fIfilename\fR
+Specify the file containing the hash.
+.TP
+\fB-t, --type\fR \fItype\fR
+Specify the hash type (e.g., MD5, SHA256, etc.).
+.TP
+\fB-w, --wordlist\fR \fIpath\fR
+Path to the wordlist file.
+.TP
+\fB-c, --config\fR \fIconfig.json\fR
+Specify a configuration file for custom settings.
+.TP
+\fB-o, --output\fR \fIfile\fR
+Save results to the specified file.
+.TP
+\fB-v, --verbose\fR
+Enable verbose output.
+.TP
+\fB--version\fR
+Show the version of the program.
+.SH EXAMPLES
+.TP
+hashcheck -f hash.txt -w rockyou.txt
+Detect the hash type in \fIhash.txt\fR and attempt to crack it using the \fIrockyou.txt\fR wordlist.
+.TP
+hashcheck --file hash.txt --config config.json
+Use the \fIconfig.json\fR file for settings and crack the hash in \fIhash.txt\fR.
+.SH AUTHOR
+Written by [Your Name]
+.SH REPORTING BUGS
+Report bugs to https://github.com/rcallaby/hashcheck/issues
+.SH COPYRIGHT
+Copyright (C) 2024 Richard Callaby. License MIT.
