@@ -12,6 +12,23 @@ void displayMenu() {
     std::cout << "Please choose an option: ";
 }
 
+// Function to display help message
+void printHelp() {
+    std::cout << "Usage: hashcheck [options]\n\n";
+    std::cout << "Options:\n";
+    std::cout << "  -h, --help                  Show this help message and exit\n";
+    std::cout << "  -f, --file <file>           Specify the file containing the hash\n";
+    std::cout << "  -t, --type <type>           Specify the hash type (e.g., MD5, SHA256, etc.)\n";
+    std::cout << "  -w, --wordlist <path>       Path to the wordlist file\n";
+    std::cout << "  -c, --config <file>         Specify a config JSON file for custom settings\n";
+    std::cout << "  -o, --output <file>         Save results to the specified file\n";
+    std::cout << "  -v, --verbose               Enable verbose output\n";
+    std::cout << "  --version                   Show the version of hashcheck\n\n";
+    std::cout << "Examples:\n";
+    std::cout << "  hashcheck -f hash.txt -w rockyou.txt\n";
+    std::cout << "  hashcheck --file hash.txt --config config.json\n";
+}
+
 // Function to get user input for hash manually
 std::string getUserInputHash() {
     std::string hash;
@@ -61,9 +78,12 @@ public:
         std::string configFilePath;
 
         // Check command-line arguments for input and config file
-        if (argc >= 4) {
+        if (argc >= 2) {
             std::string option = argv[1];
-            if (option == "-f") {
+            if (option == "-h" || option == "--help") {
+                printHelp();
+                exit(0);
+            } else if (option == "-f" && argc >= 4) {
                 try {
                     hashInput = FileHandler::readHashFromFile(argv[2]);
                     configFilePath = argv[3];
@@ -71,11 +91,11 @@ public:
                     std::cerr << "Error: " << e.what() << std::endl;
                     return;
                 }
-            } else if (option == "-i") {
+            } else if (option == "-i" && argc >= 4) {
                 hashInput = argv[2];
                 configFilePath = argv[3];
             } else {
-                std::cerr << "Invalid option. Use -f for file input or -i for direct input." << std::endl;
+                std::cerr << "Invalid option. Use -h or --help for usage information." << std::endl;
                 return;
             }
         } else {
