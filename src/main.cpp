@@ -16,17 +16,15 @@ void displayMenu() {
 void printHelp() {
     std::cout << "Usage: hashcheck [options]\n\n";
     std::cout << "Options:\n";
-    std::cout << "  -h, --help                  Show this help message and exit\n";
-    std::cout << "  -f, --file <file>           Specify the file containing the hash\n";
-    std::cout << "  -t, --type <type>           Specify the hash type (e.g., MD5, SHA256, etc.)\n";
-    std::cout << "  -w, --wordlist <path>       Path to the wordlist file\n";
-    std::cout << "  -c, --config <file>         Specify a config JSON file for custom settings\n";
-    std::cout << "  -o, --output <file>         Save results to the specified file\n";
-    std::cout << "  -v, --verbose               Enable verbose output\n";
-    std::cout << "  --version                   Show the version of hashcheck\n\n";
+    std::cout << "  -h,                         Show this help message and exit\n";
+    std::cout << "  -f,                         Specify the file containing the hash\n";
+    std::cout << "  -t,                         Specify the hash type (e.g., MD5, SHA256, etc.)\n";
+    std::cout << "  -w,                         Path to the wordlist file\n";
+    std::cout << "  -c,                         Specify a config JSON file for custom settings\n";
+    std::cout << "  -o,                         Save results to the specified file\n";
     std::cout << "Examples:\n";
     std::cout << "  hashcheck -f hash.txt -w rockyou.txt\n";
-    std::cout << "  hashcheck --file hash.txt --config config.json\n";
+    std::cout << "  hashcheck --f hash.txt --c config.json\n";
 }
 
 // Function to get user input for hash manually
@@ -80,7 +78,7 @@ public:
         // Check command-line arguments for input and config file
         if (argc >= 2) {
             std::string option = argv[1];
-            if (option == "-h" || option == "--help") {
+            if (option == "-h") {
                 printHelp();
                 exit(0);
             } else if (option == "-f" && argc >= 4) {
@@ -95,7 +93,7 @@ public:
                 hashInput = argv[2];
                 configFilePath = argv[3];
             } else {
-                std::cerr << "Invalid option. Use -h or --help for usage information." << std::endl;
+                std::cerr << "Invalid option. Use -h for usage information." << std::endl;
                 return;
             }
         } else {
