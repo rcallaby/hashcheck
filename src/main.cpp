@@ -5,6 +5,16 @@
 
 // Helper function to display the menu
 void displayMenu() {
+    
+    std::cout << " _     _            _     _______ _                 _     " << std::endl;
+    std::cout << "(_)   (_)          | |   (_______) |               | |    " << std::endl;
+    std::cout << " _______ _____  ___| |__  _      | |__  _____  ____| |  _ " << std::endl;
+    std::cout << "|  ___  (____ |/___)  _ \\| |     |  _ \\| ___ |/ ___) |_/ )" << std::endl;
+    std::cout << "| |   | / ___ |___ | | | | |_____| | | | ____( (___|  _ ( " << std::endl;
+    std::cout << "|_|   |_\\_____(___/|_| |_|\\______)_| |_|_____\\____)_| \\_) " << std::endl;
+    std::cout << "                                                          " << std::endl;
+
+                                                    
     std::cout << "\n--- Hashcat Cracker Menu ---" << std::endl;
     std::cout << "1. Load hash from a file" << std::endl;
     std::cout << "2. Manually enter a hash" << std::endl;
