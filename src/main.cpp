@@ -12,9 +12,11 @@ void displayMenu() {
     std::cout << "|  ___  (____ |/___)  _ \\| |     |  _ \\| ___ |/ ___) |_/ )" << std::endl;
     std::cout << "| |   | / ___ |___ | | | | |_____| | | | ____( (___|  _ ( " << std::endl;
     std::cout << "|_|   |_\\_____(___/|_| |_|\\______)_| |_|_____\\____)_| \\_) " << std::endl;
+    std::cout << "                                                          " << std::endl; 
     std::cout << "                                                          " << std::endl;
-
-                                                    
+    std::cout << "                                                          " << std::endl;
+    std::cout << "By using this software you accept all liabilty            " << std::endl;
+    std::cout << "                                                          " << std::endl;
     std::cout << "\n--- Hashcat Cracker Menu ---" << std::endl;
     std::cout << "1. Load hash from a file" << std::endl;
     std::cout << "2. Manually enter a hash" << std::endl;
@@ -26,12 +28,12 @@ void displayMenu() {
 void printHelp() {
     std::cout << "Usage: hashcheck [options]\n\n";
     std::cout << "Options:\n";
-    std::cout << "  -h,                         Show this help message and exit\n";
-    std::cout << "  -f,                         Specify the file containing the hash\n";
-    std::cout << "  -t,                         Specify the hash type (e.g., MD5, SHA256, etc.)\n";
-    std::cout << "  -w,                         Path to the wordlist file\n";
-    std::cout << "  -c,                         Specify a config JSON file for custom settings\n";
-    std::cout << "  -o,                         Save results to the specified file\n";
+    std::cout << "  -h,                   Show this help message and exit\n";
+    std::cout << "  -f,                   Specify the file containing the hash\n";
+    std::cout << "  -t,                   Specify the hash type (e.g., MD5, SHA256, etc.)\n";
+    std::cout << "  -w,                   Path to the wordlist file\n";
+    std::cout << "  -c,                   Specify a config JSON file for custom settings\n";
+    std::cout << "  -o,                   Save results to the specified file\n";
     std::cout << "Examples:\n";
     std::cout << "  hashcheck -f hash.txt -w rockyou.txt\n";
     std::cout << "  hashcheck --f hash.txt --c config.json\n";
