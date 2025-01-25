@@ -19,7 +19,21 @@ In addition to its primary functionalities, Hashcheck is built with extensibilit
 
 ## Compiling the program from source
 
+I have provided a CMake file that should make the process of compiling using gcc extremely simple. To compile the program all you need to do is go into the hashcheck directory and type make such as this:
+```
+cd hashcheck
+make
+```
+Now, in order to clean up after any compiling due to unforseen errors all you would need to do is the following:
+```
+make clean
+```
+This will remove any of the compiled binaries and avoid any future conflicts for any future changes in the source code.
 
+### Programs that need or should to be installed prior to using hashcheck
+1. Hashcat (for the obvious reason that this program is a wrapper for hashcat)
+2. Seclists (for the most commonly used passwords)
+3. Alternatively, you can install or use your own customized wordlists of passwords or meta data you may have come across.
 
 ## Examples of using hashcheck
 
