@@ -2,7 +2,7 @@
 #define HASHCAT_EXECUTOR_H
 
 #include <string>
-#include <nlohmann/json.hpp>
+#include <rapidjson/document.h>
 
 class HashcatExecutor {
 public:
