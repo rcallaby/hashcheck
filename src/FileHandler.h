@@ -2,12 +2,14 @@
 #define FILE_HANDLER_H
 
 #include <string>
-#include <nlohmann/json.hpp>
+#include <rapidjson/document.h>
+#include <rapidjson/filereadstream.h>
+#include <cstdio>
 
 class FileHandler {
 public:
     static std::string readHashFromFile(const std::string& filePath);
-    static nlohmann::json loadConfigFromFile(const std::string& configFilePath);
+    static rapidjson::Document loadConfigFromFile(const std::string& configFilePath);
 };
 
 #endif
