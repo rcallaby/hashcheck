@@ -17,6 +17,10 @@ In addition to its primary functionalities, Hashcheck is built with extensibilit
 4. Generates the hashcat command using the detected hash type, hashcat mode, and configuration parameters.
 5. Executes the command using the HashcatExecutor class, which calls the system() function to run hashcat.
 
+## Compiling the program from source
+
+
+
 ## Examples of using hashcheck
 
 ### Using command line input
