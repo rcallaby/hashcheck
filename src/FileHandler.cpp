@@ -21,5 +21,4 @@ rapidjson::Document FileHandler::loadConfigFromFile(const std::string& configFil
     return doc;
 }
 
-You should create FileHandler.cpp and add these implementations.
 
