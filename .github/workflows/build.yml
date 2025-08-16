@@ -1,4 +1,4 @@
-name: Build Hashcheck
+name: Build Hashcheck on Kali
 
 on:
   push:
@@ -13,24 +13,36 @@ jobs:
       image: kalilinux/kali-rolling
 
     steps:
-    - name: Checkout sources
+    - name: Checkout repository
       uses: actions/checkout@v3
 
     - name: Install dependencies
       run: |
-        sudo apt-get update
-        sudo apt-get install -y hashcat seclists build-essential cmake
+        apt-get update
+        apt-get install -y \
+          build-essential \
+          cmake \
+          make \
+          gcc \
+          hashcat \
+          seclists
 
-    - name: Build with make
+    - name: Compile Hashcheck
       run: |
         cd src
         make
 
-    - name: Run tests (if applicable)
+    - name: Verify binary
       run: |
-        cd src
-        make test || echo "No tests defined."
+        ls -l src/hashcheck || { echo "❌ Binary not found"; exit 1; }
 
-    - name: Build demo binary
+    - name: Test with Seclists
       run: |
-        ls -l src/bin || echo "Binary not found."
+        TEST_WORDLIST="/usr/share/seclists/Passwords/Common-Credentials/10k-most-common.txt"
+        if [ -f "$TEST_WORDLIST" ]; then
+          echo "✅ Found seclists wordlist: $TEST_WORDLIST"
+          # Example run (replace with your actual syntax)
+          ./src/hashcheck --wordlist "$TEST_WORDLIST" --hash "5f4dcc3b5aa765d61d8327deb882cf99"
+        else
+          echo "❌ Seclists not found"; exit 1
+        fi
