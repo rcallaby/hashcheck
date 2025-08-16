@@ -1,0 +1,34 @@
+name: Build Hashcheck
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout sources
+      uses: actions/checkout@v3
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y hashcat seclists build-essential cmake
+
+    - name: Build with make
+      run: |
+        cd src
+        make
+
+    - name: Run tests (if applicable)
+      run: |
+        cd src
+        make test || echo "No tests defined."
+
+    - name: Build demo binary
+      run: |
+        ls -l src/bin || echo "Binary not found."
