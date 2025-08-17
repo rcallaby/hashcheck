@@ -2,10 +2,12 @@
 #include "FileHandler.h"
 #include "HashcatExecutor.h"
 #include <iostream>
+#include <rapidjson/document.h>
+
+using rapidjson::Document;
 
 // Helper function to display the menu
 void displayMenu() {
-    
     std::cout << " _     _            _     _______ _                 _     " << std::endl;
     std::cout << "(_)   (_)          | |   (_______) |               | |    " << std::endl;
     std::cout << " _______ _____  ___| |__  _      | |__  _____  ____| |  _ " << std::endl;
@@ -119,7 +121,7 @@ public:
         }
 
         // Load configuration from JSON file
-        json config;
+        Document config;
         try {
             config = FileHandler::loadConfigFromFile(configFilePath);
         } catch (const std::exception& e) {
