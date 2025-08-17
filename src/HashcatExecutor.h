@@ -6,7 +6,7 @@
 
 class HashcatExecutor {
 public:
-    static std::string generateHashcatCommand(int hashcatMode, const rapidjson::Value& config);
+    static std::string generateHashcatCommand(int hashcatMode, const rapidjson::Document& config, const std::string& hash);
     static void executeHashcatCommand(const std::string& command);
 };
 
