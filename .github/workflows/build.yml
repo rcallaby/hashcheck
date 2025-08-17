@@ -25,6 +25,7 @@ jobs:
           make \
           gcc \
           hashcat \
+          rapidjson-dev \
           seclists
 
     - name: Compile Hashcheck
