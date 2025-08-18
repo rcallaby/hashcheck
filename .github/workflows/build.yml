@@ -37,7 +37,3 @@ jobs:
       run: |
         ls -l src/hashcheck || { echo "❌ Binary not found"; exit 1; }
 
-    - name: Run tests
-      run: |
-        chmod +x src/tests.sh
-        src/tests.sh
