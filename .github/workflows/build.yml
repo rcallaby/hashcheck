@@ -37,13 +37,7 @@ jobs:
       run: |
         ls -l src/hashcheck || { echo "❌ Binary not found"; exit 1; }
 
-    - name: Test with Seclists
+    - name: Run tests
       run: |
-        TEST_WORDLIST="/usr/share/seclists/Passwords/Common-Credentials/10k-most-common.txt"
-        if [ -f "$TEST_WORDLIST" ]; then
-          echo "✅ Found seclists wordlist: $TEST_WORDLIST"
-          # Example run (replace with your actual syntax)
-          ./src/hashcheck --wordlist "$TEST_WORDLIST" --hash "5f4dcc3b5aa765d61d8327deb882cf99"
-        else
-          echo "❌ Seclists not found"; exit 1
-        fi
+        chmod +x ./tests.sh
+        ./test.sh
