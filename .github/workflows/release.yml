@@ -1,0 +1,84 @@
+name: Build and release DEB & RPM packages
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-packages:
+    name: Build Packages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up variables
+        run: |
+          echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
+          echo "PACKAGE=hashcheck" >> $GITHUB_ENV
+
+      # Build DEB
+      - name: Setup DEB package structure
+        run: |
+          mkdir -p pkg-deb/DEBIAN
+          cat > pkg-deb/DEBIAN/control <<EOF
+          Package: $PACKAGE
+          Version: ${VERSION}
+          Section: utils
+          Priority: optional
+          Architecture: all
+          Maintainer: ${{ github.actor }} <no-reply@github.com>
+          Description: A hash type detector and hashcat wrapper
+          EOF
+          mkdir -p pkg-deb/usr/bin
+          install -m 0755 hashcheck.sh pkg-deb/usr/bin/hashcheck
+
+      - name: Build DEB package
+        run: dpkg-deb --build pkg-deb ./${PACKAGE}_${VERSION}_all.deb
+
+      # Build RPM
+      - name: Install rpm tools
+        run: sudo apt update && sudo apt install -y rpm
+
+      - name: Setup RPM structure
+        run: |
+          mkdir -p rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+          cp hashcheck.sh rpmbuild/SOURCES/
+          cat > rpmbuild/SPECS/${PACKAGE}.spec <<EOF
+          Name:           $PACKAGE
+          Version:        ${VERSION}
+          Release:        1
+          Summary:        A hash type detector and hashcat wrapper
+          License:        MIT
+          Source0:        hashcheck.sh
+          BuildArch:      noarch
+
+          %description
+          Detects hash type and forwards to hashcat.
+
+          %prep
+
+          %install
+          mkdir -p %{buildroot}/usr/bin
+          install -m 0755 %{SOURCE0} %{buildroot}/usr/bin/${PACKAGE}
+
+          %files
+          /usr/bin/${PACKAGE}
+          EOF
+
+      - name: Build RPM package
+        run: rpmbuild --define "_topdir $(pwd)/rpmbuild" -bb rpmbuild/SPECS/${PACKAGE}.spec
+
+      # Upload artifacts
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: |
+            ./${PACKAGE}_${VERSION}_all.deb
+            rpmbuild/RPMS/noarch/${PACKAGE}-${VERSION}-1.noarch.rpm
+
