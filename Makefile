@@ -1,6 +1,6 @@
 CXX = g++
-CXXFLAGS = -std=c++17 -I./include
-LDFLAGS = -lnlohmann_json
+CXXFLAGS = -std=c++17 -I./include -I/usr/include/rapidjson
+LDFLAGS = 
 
 SRC_DIR = src
 OBJ_DIR = obj
@@ -12,8 +12,8 @@ TARGET = $(BIN_DIR)/hashcheck
 
 all: $(TARGET)
 
-$(TARGET): $(OBJECTS)
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
+$(TARGET): $(OBJECTS) | $(BIN_DIR)
+	$(CXX) $(CXXFLAGS) -o $@ $^
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
@@ -28,3 +28,4 @@ clean:
 	rm -rf $(OBJ_DIR) $(TARGET)
 
 .PHONY: all clean
+
