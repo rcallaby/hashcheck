@@ -37,3 +37,10 @@ jobs:
       run: |
         ls -l src/hashcheck || { echo "❌ Binary not found"; exit 1; }
 
+    - name: Upload compiled binary
+      uses: actions/upload-artifact@v4
+      with:
+        name: hashcheck-rc
+        path: src/hashcheck
+
+
