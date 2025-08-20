@@ -18,7 +18,7 @@ jobs:
         uses: dawidd6/action-download-artifact@v8
         with:
           workflow: build.yml            # or the workflow file that builds + uploads
-          name: hashcheck-binary         # must match upload name in Build workflow
+          name: hashcheck-rc             # must match upload name in Build workflow
           path: dist
           ref: ${{ github.ref }}         # the current tag ref (e.g. refs/tags/v1.2.3)
           workflow_conclusion: success
