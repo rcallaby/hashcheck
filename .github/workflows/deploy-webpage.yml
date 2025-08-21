@@ -1,0 +1,55 @@
+name: Deploy Installation Webpage on Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get release information
+        id: release-info
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          RELEASE_DATA=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/repos/${{ github.repository }}/releases/tags/$TAG)
+          DEB_URL=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name | endswith(".deb")) | .browser_download_url' | head -n 1)
+          if [ -z "$DEB_URL" ]; then
+            echo "No .deb file found in release assets."
+            exit 1
+          fi
+          echo "deb_url=$DEB_URL" >> $GITHUB_OUTPUT
+
+      - name: Generate webpage
+        run: |
+          TAG=${{ steps.release-info.outputs.tag }}
+          DEB_URL=${{ steps.release-info.outputs.deb_url }}
+          cat <<EOF > index.html
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Install Hashcheck</title>
+          </head>
+          <body>
+            <h1>Install Hashcheck v$TAG</h1>
+            <p>Download the latest DEB file from <a href="$DEB_URL">here</a>.</p>
+            <p>To install on a Linux system, run the following command after downloading:</p>
+            <pre><code>sudo dpkg -i &lt;downloaded-deb-file&gt;</code></pre>
+            <p>Replace <code>&lt;downloaded-deb-file&gt;</code> with the actual filename of the downloaded DEB package.</p>
+          </body>
+          </html>
+          EOF
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: .
+          branch: gh-pages
+          clean: true
+          single-commit: true
