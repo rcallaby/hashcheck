@@ -15,18 +15,25 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Install packaging tools
+    - name: Install build & packaging dependencies
       run: |
         apt-get update
         apt-get install -y \
+          g++ \
+          make \
+          pkg-config \
+          libssl-dev \
           dpkg-dev \
-          fakeroot
+          fakeroot \
+          rapidjson-dev \
+          hashcat \
+          seclists
 
-    - name: Download compiled binary from build workflow
-      uses: actions/download-artifact@v4
-      with:
-        name: hashcheck-binary
-        path: src/hashcheck-binary
+    - name: Build Hashcheck
+      run: |
+        make
+        mkdir -p package/usr/bin
+        cp bin/hashcheck package/usr/bin/hashcheck
 
     - name: Create DEBIAN control file
       run: |
