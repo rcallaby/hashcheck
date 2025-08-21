@@ -1,4 +1,4 @@
-name: Release
+name: Release Hashcheck Deb Package
 
 on:
   push:
@@ -6,44 +6,56 @@ on:
       - "v*.*.*"
 
 jobs:
-  build-and-release:
+  release:
     runs-on: ubuntu-latest
+    container:
+      image: kalilinux/kali-rolling
 
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-      - name: Set up Ruby for fpm
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: "3.1"
+    - name: Install packaging tools
+      run: |
+        apt-get update
+        apt-get install -y \
+          dpkg-dev \
+          fakeroot
 
-      - name: Install fpm
-        run: gem install --no-document fpm
+    - name: Download compiled binary from build workflow
+      uses: actions/download-artifact@v4
+      with:
+        name: hashcheck-binary
+        path: package/usr/local/bin
 
-      - name: Build .deb package
-        env:
-          VERSION: ${{ github.ref_name }}   # e.g. v1.2.3
-        run: |
-          VERSION="${VERSION#v}"
-          mkdir -p packages/usr/local/bin
-          cp bin/hashcheck-binary packages/usr/local/bin/hashcheck-binary
+    - name: Create DEBIAN control file
+      run: |
+        mkdir -p package/DEBIAN
 
-          # Build DEB
-          fpm -s dir -t deb -n hashcheck -v "$VERSION" -a amd64 \
-              --description "HashCheck - detects hash types & runs hashcat" \
-              --license "MIT" \
-              --url "https://github.com/${{ github.repository }}" \
-              -d "hashcat" \
-              -d "seclists" \
-              -C packages usr \
-              -p hashcheck_${VERSION}_amd64.deb
+        cat <<EOF > package/DEBIAN/control
+        Package: hashcheck
+        Version: ${GITHUB_REF_NAME#v}
+        Section: utils
+        Priority: optional
+        Architecture: amd64
+        Maintainer: Hashcheck Maintainers <richard@richardcallaby.com>
+        Depends: hashcat, rapidjson-dev, seclists
+        Description: Hashcheck - A hash detection and cracking automation tool
+         Hashcheck determines hash types and automatically supplies the right 
+         arguments to hashcat to crack them.
+        EOF
 
-      - name: Publish GitHub Release with package
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref_name }}
-          files: |
-            hashcheck_*.deb
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Build .deb package
+      run: |
+        dpkg-deb --build --root-owner-group package hashcheck_${GITHUB_REF_NAME#v}_amd64.deb
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ github.ref_name }}
+        name: "Hashcheck ${{ github.ref_name }}"
+        draft: false
+        prerelease: false
+        files: hashcheck_${{ github.ref_name }}_amd64.deb
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
