@@ -1,39 +1,25 @@
-name: Package & Release
+name: Release
 
 on:
   push:
     tags:
-      - "v*"
-
-permissions:
-  contents: write
+      - "v*.*.*"
 
 jobs:
-  package:
+  build-and-release:
     runs-on: ubuntu-latest
 
     steps:
-      # Pull the compiled artifact from your Build workflow for THIS tag
-      - name: Download compiled binary artifact
-        uses: dawidd6/action-download-artifact@v8
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby for fpm
+        uses: ruby/setup-ruby@v1
         with:
-          workflow: build.yml            # or the workflow file that builds + uploads
-          name: hashcheck-binary             # must match upload name in Build workflow
-          path: dist
-          ref: ${{ github.ref }}         # the current tag ref (e.g. refs/tags/v1.2.3)
-          workflow_conclusion: success
+          ruby-version: "3.1"
 
-      - name: Verify artifact
-        run: |
-          ls -al dist
-          test -f dist/hashcheck || (echo "hashcheck binary not found in artifact" && exit 1)
-          chmod +x dist/hashcheck
-
-      - name: Install packaging tools (fpm)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ruby ruby-dev build-essential rpm
-          sudo gem install --no-document fpm
+      - name: Install fpm
+        run: gem install --no-document fpm
 
       - name: Build .deb and .rpm packages
         env:
@@ -43,31 +29,33 @@ jobs:
           mkdir -p packages/usr/local/bin
           cp dist/hashcheck packages/usr/local/bin/hashcheck
 
-          # Build DEB (declares hashcat + seclists as dependencies)
+          # Build DEB
           fpm -s dir -t deb -n hashcheck -v "$VERSION" -a amd64 \
               --description "HashCheck - detects hash types & runs hashcat" \
               --license "MIT" \
               --url "https://github.com/${{ github.repository }}" \
-              -C packages usr \
               -d "hashcat" \
-              -d "seclists"
+              -d "seclists" \
+              -C packages usr \
+              -p hashcheck_${VERSION}_amd64.deb
 
-          # Build RPM (also declares hashcat + seclists)
-          # Note: ensure your target RPM-based distros have packages/repo for 'seclists'
+          # Build RPM
           fpm -s dir -t rpm -n hashcheck -v "$VERSION" -a x86_64 \
               --description "HashCheck - detects hash types & runs hashcat" \
               --license "MIT" \
               --url "https://github.com/${{ github.repository }}" \
-              -C packages usr \
               -d "hashcat" \
-              -d "seclists"
+              -d "seclists" \
+              -C packages usr \
+              -p hashcheck-${VERSION}-1.x86_64.rpm
 
       - name: Publish GitHub Release with packages
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           files: |
-            *.deb
-            *.rpm
+            hashcheck_*.deb
+            hashcheck-*.rpm
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
