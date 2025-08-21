@@ -56,13 +56,13 @@ jobs:
 
     - name: Build .deb package
       run: |
-        dpkg-deb --build --root-owner-group package hashcheck_${GITHUB_REF_NAME#v}_amd64.deb
+        dpkg-deb --build --root-owner-group package hashcheck_${GITHUB_REF_NAME}_amd64.deb
 
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
       with:
         tag_name: ${{ github.ref_name }}
-        name: "Hashcheck ${{ github.ref_name }}"
+        name: "hashcheck ${{ github.ref_name }}"
         draft: false
         prerelease: false
         files: hashcheck_${{ github.ref_name }}_amd64.deb
