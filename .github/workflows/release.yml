@@ -21,13 +21,13 @@ jobs:
       - name: Install fpm
         run: gem install --no-document fpm
 
-      - name: Build .deb and .rpm packages
+      - name: Build .deb package
         env:
           VERSION: ${{ github.ref_name }}   # e.g. v1.2.3
         run: |
           VERSION="${VERSION#v}"
           mkdir -p packages/usr/local/bin
-          cp dist/hashcheck-binary packages/usr/local/bin/hashcheck
+          cp bin/hashcheck-binary packages/usr/local/bin/hashcheck-binary
 
           # Build DEB
           fpm -s dir -t deb -n hashcheck -v "$VERSION" -a amd64 \
@@ -39,23 +39,11 @@ jobs:
               -C packages usr \
               -p hashcheck_${VERSION}_amd64.deb
 
-          # Build RPM
-          fpm -s dir -t rpm -n hashcheck -v "$VERSION" -a x86_64 \
-              --description "HashCheck - detects hash types & runs hashcat" \
-              --license "MIT" \
-              --url "https://github.com/${{ github.repository }}" \
-              -d "hashcat" \
-              -d "seclists" \
-              -C packages usr \
-              -p hashcheck-${VERSION}-1.x86_64.rpm
-
-      - name: Publish GitHub Release with packages
+      - name: Publish GitHub Release with package
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           files: |
             hashcheck_*.deb
-            hashcheck-*.rpm
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
