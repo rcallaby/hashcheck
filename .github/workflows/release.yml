@@ -27,7 +27,7 @@ jobs:
         run: |
           VERSION="${VERSION#v}"
           mkdir -p packages/usr/local/bin
-          cp dist/hashcheck packages/usr/local/bin/hashcheck
+          cp dist/hashcheck-binary packages/usr/local/bin/hashcheck
 
           # Build DEB
           fpm -s dir -t deb -n hashcheck -v "$VERSION" -a amd64 \
