@@ -1,0 +1,70 @@
+name: Publish APT Repository
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to pull .deb from (e.g. v0.1.14-alpha). Leave blank for latest."
+        required: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout gh-pages branch
+      uses: actions/checkout@v3
+      with:
+        ref: gh-pages
+
+    - name: Download .deb from release
+      run: |
+        if [ -n "${{ github.event.inputs.tag }}" ]; then
+          echo "📦 Fetching release for tag: ${{ github.event.inputs.tag }}"
+          api_url="https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ github.event.inputs.tag }}"
+        else
+          echo "📦 Fetching latest release"
+          api_url="https://api.github.com/repos/${{ github.repository }}/releases/latest"
+        fi
+
+        deb_url=$(curl -s $api_url | jq -r '.assets[] | select(.name | endswith(".deb")) | .browser_download_url')
+
+        if [ -z "$deb_url" ] || [ "$deb_url" = "null" ]; then
+          echo "No .deb file found for this release"
+          exit 1
+        fi
+
+        echo "⬇Downloading: $deb_url"
+        wget "$deb_url"
+
+    - name: Preserve repo structure and add new package
+      run: |
+        mkdir -p pool/main/h/hashcheck
+        mkdir -p dists/stable/main/binary-amd64
+
+        for deb in *.deb; do
+          if [ -f "pool/main/h/hashcheck/$deb" ]; then
+            echo "Skipping $deb (already exists in repo)"
+          else
+            echo "Adding $deb to repo"
+            mv "$deb" pool/main/h/hashcheck/
+          fi
+        done
+
+        echo "Regenerating Packages index"
+        dpkg-scanpackages pool /dev/null | tee dists/stable/main/binary-amd64/Packages | gzip -9c > dists/stable/main/binary-amd64/Packages.gz
+
+    - name: Commit and push
+      run: |
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+
+        if git diff --quiet; then
+          echo "ℹNo changes to commit"
+        else
+          git add .
+          git commit -m "Update APT repo with new release"
+          git push origin gh-pages
+        fi
