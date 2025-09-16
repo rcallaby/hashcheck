@@ -42,29 +42,29 @@ jobs:
         mkdir -p package/DEBIAN
 
         cat <<EOF > package/DEBIAN/control
-        Package: hashcheck
+        Package: hashcheck-rc
         Version: ${GITHUB_REF_NAME#v}
         Section: utils
         Priority: optional
         Architecture: amd64
-        Maintainer: Hashcheck Maintainers <richard@richardcallaby.com>
+        Maintainer: Hashcheck-rc Maintainers <richard@richardcallaby.com>
         Depends: hashcat, rapidjson-dev, seclists
-        Description: Hashcheck - A hash detection and cracking automation tool
+        Description: Hashcheck-rc - A hash detection and cracking automation tool
          Hashcheck determines hash types and automatically supplies the right 
          arguments to hashcat to crack them.
         EOF
 
     - name: Build .deb package
       run: |
-        dpkg-deb --build --root-owner-group package hashcheck_${GITHUB_REF_NAME}_amd64.deb
+        dpkg-deb --build --root-owner-group package hashcheck-rc_${GITHUB_REF_NAME}_amd64.deb
 
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
       with:
         tag_name: ${{ github.ref_name }}
-        name: "hashcheck ${{ github.ref_name }}"
+        name: "hashcheck-rc ${{ github.ref_name }}"
         draft: false
         prerelease: false
-        files: hashcheck_${{ github.ref_name }}_amd64.deb
+        files: hashcheck-rc_${{ github.ref_name }}_amd64.deb
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
