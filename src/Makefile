@@ -5,7 +5,7 @@ CXXFLAGS := -Wall -O2 -std=c++17
 # Project structure
 SRC := $(wildcard *.cpp)
 OBJ := $(SRC:.cpp=.o)
-BIN := hashcheck
+BIN := hashcheck-rc
 
 # Default target
 all: $(BIN)
