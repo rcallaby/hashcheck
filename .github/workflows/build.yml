@@ -41,6 +41,6 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: hashcheck-binary
-        path: src/hashcheck
+        path: src/hashcheck-rc
 
 

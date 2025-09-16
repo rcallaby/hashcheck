@@ -8,7 +8,7 @@ BIN_DIR = bin
 
 SOURCES = $(wildcard $(SRC_DIR)/*.cpp)
 OBJECTS = $(SOURCES:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
-TARGET = $(BIN_DIR)/hashcheck
+TARGET = $(BIN_DIR)/hashcheck-rc
 
 all: $(TARGET)
 
