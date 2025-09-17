@@ -27,7 +27,7 @@ jobs:
             libssl-dev \
             dpkg-dev \
             fakeroot \
-            librapidjson-dev \
+            rapidjson-dev \
             hashcat \
             seclists
 
@@ -84,7 +84,7 @@ jobs:
             pkgconfig \
             openssl-devel \
             rpm-build \
-            rapidjson-devel \
+            rapidjson-dev \
             hashcat \
             seclists
 
