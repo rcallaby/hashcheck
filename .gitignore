@@ -1,2 +1,9 @@
 .vscode
+./src/config.json
 config.json
+obj/
+bin/
+*.obj
+*.o
+*.so
+*.json
