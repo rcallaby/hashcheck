@@ -1,0 +1,106 @@
+name: RPM Package Release
+
+on:
+  push:
+    tags:
+      - "rpm-v*.*.*"
+
+jobs:
+  rpm_release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    # Using the Kali container as requested in the original file, though a standard
+    # Debian/Ubuntu base might be more stable for packaging.
+    container:
+      image: kalilinux/kali-rolling
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Install build & RPM dependencies
+      # Ensure non-interactive mode for apt-get inside the container
+      run: |
+        apt-get update
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+          g++ \
+          make \
+          pkg-config \
+          libssl-dev \
+          rapidjson-dev \
+          hashcat \
+          seclists \
+          rpm \
+          rpmlint
+
+    - name: Build Hashcheck Binary
+      # Assumes your project's `make` command compiles the binary to `bin/hashcheck`
+      run: |
+        make
+
+    - name: Set up RPM build environment
+      run: |
+        # Create standard RPM directory structure
+        mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+        # Copy the prebuilt binary to the SOURCES directory
+        cp bin/hashcheck ~/rpmbuild/SOURCES/hashcheck
+
+    - name: Create RPM spec file
+      run: |
+        # Using a quoted Heredoc ('EOF') to prevent shell expansion of variables like $() and %{} 
+        # that are part of the spec file itself.
+        cat <<'EOF' > ~/rpmbuild/SPECS/hashcheck-rc.spec
+Name:           hashcheck-rc
+Version:        ${GITHUB_REF_NAME#v}
+Release:        1
+Summary:        Hash detection and cracking automation tool
+License:        GPL-3.0
+Group:          Applications/Security
+Source0:        hashcheck
+Requires:       hashcat, rapidjson-devel, seclists
+BuildArch:      x86_64
+
+%description
+Hashcheck-rc is a hash detection and cracking automation tool.
+It determines hash types and automatically supplies the right
+arguments to hashcat to crack them.
+
+%prep
+# Since the binary is prebuilt and copied as Source0, we skip standard setup
+# We use -c to create a directory and -n to specify the name without version suffix, 
+# although in this case, we're not actually using it for source unpacking.
+# A simpler approach for a pre-built binary is often just:
+
+%install
+mkdir -p %{buildroot}/usr/bin
+install -m 0755 %{SOURCE0} %{buildroot}/usr/bin/hashcheck
+
+%files
+/usr/bin/hashcheck
+
+%changelog
+* $(date +"%a %b %d %Y") Hashcheck-rc Maintainers <richard@richardcallaby.com> - ${GITHUB_REF_NAME#v}-1
+- Initial RPM release
+EOF
+
+    - name: Build RPM package
+      run: |
+        # Build the package from the spec file
+        rpmbuild -ba ~/rpmbuild/SPECS/hashcheck-rc.spec
+        # Copy the final package to the current working directory for artifact upload
+        cp ~/rpmbuild/RPMS/x86_64/hashcheck-rc-${GITHUB_REF_NAME#v}-1.x86_64.rpm .
+
+    - name: Create GitHub Release
+      # Uses softprops/action-gh-release to automatically create/update the release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ github.ref_name }}
+        name: "Hashcheck RPM Release ${{ github.ref_name }}"
+        draft: false
+        prerelease: false
+        # ONLY attach the RPM file
+        files: |
+          hashcheck-rc-${{ github.ref_name#v }}-1.x86_64.rpm
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
