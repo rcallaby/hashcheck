@@ -1,0 +1,81 @@
+name: Generate and Deploy APT Repository
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'pool/**.deb' # Triggers only when a new .deb package is added or modified
+  workflow_dispatch: # Allows you to run this manually from the Actions tab
+
+permissions:
+  contents: write # Required to allow the workflow to commit and push index files
+
+jobs:
+  build-repository:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Debian Repository Tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dpkg-dev apt-utils gnupg
+
+      - name: Import GPG Private Key
+        uses: crappy/import-gpg@v1.0.1
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+
+      - name: Rebuild APT Metadata and Index Mapping
+        run: |
+          # 1. Clear old structural metadata files to prevent duplicates
+          rm -f Packages Packages.gz Release Release.gpg InRelease
+
+          # 2. Re-scan the pool/ directory to map binary packages
+          dpkg-scanpackages -m pool /dev/null > Packages
+          gzip -9k -f Packages
+
+          # 3. Formulate the static Release configurations
+          echo "Origin: Custom Linux Apps Repo" > Release
+          echo "Label: Custom Linux Apps" >> Release
+          echo "Suite: stable" >> Release
+          echo "Codename: stable" >> Release
+          echo "Architectures: amd64 arm64" >> Release
+          echo "Components: main" >> Release
+          echo "Description: "Check Hashes on Linux" >> Release
+
+          # 4. Append package cryptographic verification hashes to the Release file
+          echo "MD5Sum:" >> Release
+          printf " $(md5sum Packages | awk '{print $1" "$2}')\n $(md5sum Packages.gz | awk '{print $1" "$2}')\n" >> Release
+          echo "SHA256:" >> Release
+          printf " $(sha256sum Packages | awk '{print $1" "$2}')\n $(sha256sum Packages.gz | awk '{print $1" "$2}')\n" >> Release
+
+      - name: Cryptographically Sign Repository Indexes
+        run: |
+          # Grab the Key ID dynamically from the imported keyring
+          GPG_KEY_ID=$(gpg --list-secret-keys --keyid-format LONG | grep sec | awk '{print $2}' | cut -d'/' -f2)
+          
+          # Generate inline signature and detached signature files
+          gpg --default-key "$GPG_KEY_ID" --pinentry-mode loopback --passphrase "${{ secrets.GPG_PASSPHRASE }}" --clearsign --output InRelease Release
+          gpg --default-key "$GPG_KEY_ID" --pinentry-mode loopback --passphrase "${{ secrets.GPG_PASSPHRASE }}" -abs --output Release.gpg Release
+
+      - name: Commit and Push Repository Updates to Pages Branch
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Force add metadata changes without messing with tracking changes
+          git add Packages Packages.gz Release Release.gpg InRelease
+          
+          # Only commit and push if the binary changes yielded fresh index structures
+          if git diff --staged --quiet; then
+            echo "No pipeline modifications detected. Repository matches the latest tag index."
+          else
+            git commit -m "chore: automated metadata indexing and signature deployment [skip ci]"
+            git push origin main
+          fi
