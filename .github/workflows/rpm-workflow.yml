@@ -1,0 +1,122 @@
+name: RPM Package Build
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+
+jobs:
+  rpm-build:
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          dnf groupinstall -y "Development Tools"
+          dnf install -y \
+            gcc-c++ \
+            make \
+            rpm-build \
+            rpmdevtools \
+            rapidjson-devel \
+            git
+
+      - name: Setup RPM build environment
+        run: |
+          rpmdev-setuptree
+
+      - name: Create tarball
+        run: |
+          mkdir -p ~/rpmbuild/SOURCES
+          tar --exclude='.git' --exclude='.github' --exclude='*.o' --exclude='obj' --exclude='bin' \
+            -czf ~/rpmbuild/SOURCES/hashcheck-$(git describe --tags --always).tar.gz .
+          echo "TARBALL=$(ls ~/rpmbuild/SOURCES/*.tar.gz | xargs basename)" >> $GITHUB_ENV
+
+      - name: Create spec file
+        run: |
+          cat > ~/rpmbuild/SPECS/hashcheck.spec << 'EOF'
+          Name:           hashcheck
+          Version:        1.0.0
+          Release:        1%{?dist}
+          Summary:        A hashcat wrapper tool to determine hash type and forward to hashcat
+          License:        GPL-3.0-or-later
+          
+          Source0:        %{name}-%{version}.tar.gz
+          
+          BuildRequires:  gcc-c++
+          BuildRequires:  make
+          BuildRequires:  rapidjson-devel
+          
+          Requires:       hashcat
+          
+          %description
+          HashCheck is a small tool that determines the hash type and then forwards it 
+          to hashcat for cracking. It acts as a convenient wrapper around hashcat to 
+          simplify the hash identification and cracking workflow.
+          
+          %prep
+          %setup -q
+          
+          %build
+          make
+          
+          %install
+          mkdir -p %{buildroot}%{_bindir}
+          install -m 0755 bin/hashcheck-rc %{buildroot}%{_bindir}/hashcheck
+          
+          mkdir -p %{buildroot}%{_docdir}/hashcheck
+          if [ -f README.md ]; then
+            install -m 0644 README.md %{buildroot}%{_docdir}/hashcheck/
+          fi
+          
+          %files
+          %{_bindir}/hashcheck
+          %doc %{_docdir}/hashcheck/
+          
+          %changelog
+          * $(date +%a\ %b\ %d\ %Y) RPM Build System <nobody@localhost> - 1.0.0-1
+          - Initial RPM package build
+          EOF
+
+      - name: Build RPM package
+        run: |
+          rpmbuild -ba ~/rpmbuild/SPECS/hashcheck.spec
+
+      - name: List built packages
+        run: |
+          ls -lah ~/rpmbuild/RPMS/
+          ls -lah ~/rpmbuild/SRPMS/
+
+      - name: Upload RPM artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: rpm-packages
+          path: |
+            ~/rpmbuild/RPMS/*/hashcheck-*.rpm
+            ~/rpmbuild/SRPMS/hashcheck-*.src.rpm
+          retention-days: 30
+
+      - name: Create Release (on tag)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            ~/rpmbuild/RPMS/*/hashcheck-*.rpm
+            ~/rpmbuild/SRPMS/hashcheck-*.src.rpm
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
