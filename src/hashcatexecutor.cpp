@@ -1,6 +1,6 @@
 #include "HashcatExecutor.h"
 #include <iostream>
-#include <cstdlib>  // For system() function
+#include <cstdlib>  
 #include <rapidjson/document.h>
 
 std::string HashcatExecutor::generateHashcatCommand(int hashcatMode, const rapidjson::Document& config, const std::string& hash) {
