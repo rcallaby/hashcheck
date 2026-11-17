@@ -1,36 +1,36 @@
-.TH HASHCHECK 1 "November 2026" "revision" "User Commands"
+.TH HASHCHECK-RC 1 "November 2026" "Revision 3" "User Commands"
 .SH NAME
-hashcheck \- Hashcat wrapper with conservative hash format detection
+hashcheck-rc \- conservative hash format detector and Hashcat wrapper
 .SH SYNOPSIS
 .B hashcheck-rc
-.B -i HASH | -f FILE
+.RB ( -i " HASH" " | " -f " FILE" )
 .B -c CONFIG
-.RB [ --mode " NUMBER"]
+.RB [ --mode " NUMBER" ]
 .RB [ --dry-run ]
 .SH DESCRIPTION
-Runs Hashcat with a configured wordlist. Only selected structured hash formats are identified automatically. Raw hexadecimal digests are ambiguous and require an explicit mode.
+Invokes Hashcat with a configured wordlist. Automatically recognizes selected structured encodings; raw hex digests require an explicit mode.
 .SH OPTIONS
 .TP
 .B -i HASH
-Supply one hash.
+Single hash value.
 .TP
 .B -f FILE
-Read the first whitespace-delimited token from a file.
+File containing exactly one whitespace-delimited hash.
 .TP
 .B -c CONFIG
-Read a JSON configuration with hashcat_path and wordlist strings.
+JSON configuration containing hashcat_path and wordlist strings.
 .TP
 .B --mode NUMBER
-Select the Hashcat mode explicitly.
+Explicit Hashcat mode.
 .TP
 .B --dry-run
-Print the planned arguments without executing Hashcat.
+Show planned argument vector without launching Hashcat.
 .TP
 .B -h, --help
-Show help.
+Display help.
 .SH EXIT STATUS
-Returns zero on success, nonzero on invalid input or execution failure.
-.SH BUGS
-https://github.com/rcallaby/hashcheck/issues
+Zero if the wrapper and Hashcat exit successfully; nonzero for invalid input or child failure. Hashcat exhaustion is not successful recovery.
+.SH SECURITY
+The hash is passed on the command line and may be visible in process listings.
 .SH LICENSE
 MIT.

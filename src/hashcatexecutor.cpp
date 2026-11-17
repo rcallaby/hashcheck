@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <filesystem>
 #ifdef _WIN32
 #include <process.h>
 #else
@@ -20,9 +21,18 @@ static std::string requiredString(const rapidjson::Document& config, const char*
 }
 
 static std::vector<std::string> arguments(int mode, const rapidjson::Document& config, const std::string& hash) {
-    if (mode < 0 || hash.empty() || hash.size() > 16384 || hash.find('\n') != std::string::npos || hash.find('\r') != std::string::npos)
+    if (mode < 0 || hash.empty() || hash.size() > 16384 || hash.find('\n') != std::string::npos || hash.find('\r') != std::string::npos || hash.find('\0') != std::string::npos)
         throw std::runtime_error("Invalid hash or Hashcat mode");
-    return {requiredString(config, "hashcat_path"), "-m", std::to_string(mode), "-a", "0", hash, requiredString(config, "wordlist")};
+    auto executable = requiredString(config, "hashcat_path");
+    auto wordlist = requiredString(config, "wordlist");
+    if (executable.find('\0') != std::string::npos || wordlist.find('\0') != std::string::npos)
+        throw std::runtime_error("NUL byte in configuration path");
+    if (!std::filesystem::is_regular_file(wordlist))
+        throw std::runtime_error("Wordlist is not a readable regular file: " + wordlist);
+    // -- ends option parsing; use a temporary file for hashes starting with '-'.
+    // Hashcat accepts a hash as a positional argument; reject option-like values.
+    if (hash[0] == '-') throw std::runtime_error("Hash must not begin with '-'");
+    return {executable, "-m", std::to_string(mode), "-a", "0", hash, wordlist};
 }
 
 std::string HashcatExecutor::generateHashcatCommand(int mode, const rapidjson::Document& config, const std::string& hash) {
@@ -47,6 +57,7 @@ void HashcatExecutor::executeHashcat(int mode, const rapidjson::Document& config
 #ifdef _WIN32
     int result = _spawnvp(_P_WAIT, argv[0], argv.data());
     if (result == -1) throw std::runtime_error("Unable to launch hashcat");
+    // Hashcat: 0=cracked, 1=exhausted, 2=aborted; other codes indicate errors.
     if (result != 0) throw std::runtime_error("hashcat exited with status " + std::to_string(result));
 #else
     pid_t pid = fork();
@@ -56,7 +67,10 @@ void HashcatExecutor::executeHashcat(int mode, const rapidjson::Document& config
     while (waitpid(pid, &status, 0) == -1) {
         if (errno != EINTR) throw std::runtime_error("waitpid failed");
     }
-    if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
-        throw std::runtime_error("hashcat failed (status " + std::to_string(status) + ")");
+    if (WIFSIGNALED(status))
+        throw std::runtime_error("hashcat terminated by signal " + std::to_string(WTERMSIG(status)));
+    if (!WIFEXITED(status)) throw std::runtime_error("hashcat did not exit normally");
+    if (WEXITSTATUS(status) != 0)
+        throw std::runtime_error("hashcat exited with status " + std::to_string(WEXITSTATUS(status)));
 #endif
 }

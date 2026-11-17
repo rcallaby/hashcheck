@@ -28,8 +28,9 @@ int main(int argc, char** argv) {
             std::string value = argv[i];
             if (arg == "-i") { if (!file.empty() || !hash.empty()) throw std::runtime_error("Only one input allowed"); hash = value; }
             if (arg == "-f") { if (!file.empty() || !hash.empty()) throw std::runtime_error("Only one input allowed"); file = value; }
-            if (arg == "-c") configPath = value;
+            if (arg == "-c") { if (!configPath.empty()) throw std::runtime_error("Duplicate -c"); configPath = value; }
             if (arg == "--mode") {
+                if (explicitMode) throw std::runtime_error("Duplicate --mode");
                 size_t consumed = 0;
                 mode = std::stoi(value, &consumed);
                 if (consumed != value.size() || mode < 0) throw std::runtime_error("Invalid mode");

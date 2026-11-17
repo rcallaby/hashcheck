@@ -1,70 +1,41 @@
-name: Release Hashcheck Deb Package
-
+name: Build Debian artifact
 on:
+  workflow_dispatch:
   push:
-    tags:
-      - "v*.*.*"
-
+    tags: ['v*.*.*']
+permissions:
+  contents: read
 jobs:
-  release:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    container:
-      image: kalilinux/kali-rolling
-
+  deb:
+    runs-on: ubuntu-24.04
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
-
-    - name: Install build & packaging dependencies
-      run: |
-        apt-get update
-        apt-get install -y \
-          g++ \
-          make \
-          pkg-config \
-          libssl-dev \
-          dpkg-dev \
-          fakeroot \
-          rapidjson-dev \
-          hashcat \
-          seclists
-
-    - name: Build Hashcheck
-      run: |
-        make
-        mkdir -p package/usr/bin
-        cp bin/hashcheck package/usr/bin/hashcheck
-
-    - name: Create DEBIAN control file
-      run: |
-        mkdir -p package/DEBIAN
-
-        cat <<EOF > package/DEBIAN/control
-        Package: hashcheck-rc
-        Version: ${GITHUB_REF_NAME#v}
-        Section: utils
-        Priority: optional
-        Architecture: amd64
-        Maintainer: Hashcheck-rc Maintainers <richard@richardcallaby.com>
-        Depends: hashcat, rapidjson-dev, seclists
-        Description: Hashcheck-rc - A hash detection and cracking automation tool
-         Hashcheck determines hash types and automatically supplies the right 
-         arguments to hashcat to crack them.
-        EOF
-
-    - name: Build .deb package
-      run: |
-        dpkg-deb --build --root-owner-group package hashcheck-rc_${GITHUB_REF_NAME}_amd64.deb
-
-    - name: Create GitHub Release
-      uses: softprops/action-gh-release@v1
-      with:
-        tag_name: ${{ github.ref_name }}
-        name: "hashcheck-rc ${{ github.ref_name }}"
-        draft: false
-        prerelease: false
-        files: hashcheck-rc_${{ github.ref_name }}_amd64.deb
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y g++ make python3 rapidjson-dev
+      - name: Test
+        run: make check
+      - name: Package
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then version="0.0.0"; fi
+          mkdir -p pkg/DEBIAN pkg/usr/bin pkg/usr/share/doc/hashcheck-rc pkg/usr/share/man/man1
+          install -m 755 bin/hashcheck-rc pkg/usr/bin/hashcheck-rc
+          install -m 644 README.md LICENSE pkg/usr/share/doc/hashcheck-rc/
+          gzip -cn docs/hashcheck.1 > pkg/usr/share/man/man1/hashcheck-rc.1.gz
+          cat > pkg/DEBIAN/control <<EOF
+          Package: hashcheck-rc
+          Version: $version
+          Section: utils
+          Priority: optional
+          Architecture: amd64
+          Maintainer: Hashcheck maintainers <noreply@github.com>
+          Depends: hashcat
+          Description: Conservative hash format detection and Hashcat wrapper
+          EOF
+          dpkg-deb --build --root-owner-group pkg "hashcheck-rc_${version}_amd64.deb"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: deb-package
+          path: '*.deb'

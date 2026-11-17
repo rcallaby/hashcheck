@@ -10,7 +10,10 @@ std::string FileHandler::readHashFromFile(const std::string& filePath) {
         throw std::runtime_error("Unable to open hash file: " + filePath);
     }
     std::string hash;
-    file >> hash;
+    if (!(file >> hash)) throw std::runtime_error("Hash file is empty: " + filePath);
+    if (hash.size() > 16384) throw std::runtime_error("Hash exceeds maximum length");
+    std::string extra;
+    if (file >> extra) throw std::runtime_error("Hash file must contain exactly one hash");
     return hash;
 }
 
