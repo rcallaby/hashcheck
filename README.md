@@ -8,11 +8,11 @@ On Debian/Ubuntu:
 
 ```sh
 sudo apt-get update
-sudo apt-get install -y g++ make python3 rapidjson-dev
+sudo apt-get install -y g++ make rapidjson-dev
 make clean && make check
 ```
 
-`make check` builds the program, runs C++ detector tests and Python integration tests with a mock Hashcat executable; it does **not** require a GPU or a real Hashcat installation. For actual use, install Hashcat separately and provide an authorized wordlist. On Fedora, install `gcc-c++ make python3 rapidjson-devel` and run `make check`. The build and integration tests are primarily targeted at Linux; Windows and macOS builds have not been validated.
+`make check` builds the program, runs C++ detector tests and C++17 integration tests with a C++ mock Hashcat executable; it does **not** require a GPU or a real Hashcat installation. For actual use, install Hashcat separately and provide an authorized wordlist. On Fedora, install `gcc-c++ make rapidjson-devel` and run `make check`. The build and integration tests are primarily targeted at Linux; Windows and macOS builds have not been validated.
 
 ## Configuration
 
