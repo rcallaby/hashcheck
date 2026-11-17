@@ -1,5 +1,4 @@
 {
-    "hashcat_path": "/usr/local/bin/hashcat",  // Path to hashcat binary
-    "wordlist": "/path/to/custom/wordlist.txt",  // Custom wordlist path
-    "options": "--force --potfile-disable"  // Additional hashcat options
+  "hashcat_path": "hashcat",
+  "wordlist": "/path/to/authorized/wordlist.txt"
 }
