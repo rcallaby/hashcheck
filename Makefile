@@ -1,31 +1,23 @@
-CXX = g++
-CXXFLAGS = -std=c++17 -I./include -I/usr/include/rapidjson
-LDFLAGS = 
-
-SRC_DIR = src
-OBJ_DIR = obj
-BIN_DIR = bin
-
-SOURCES = $(wildcard $(SRC_DIR)/*.cpp)
-OBJECTS = $(SOURCES:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
-TARGET = $(BIN_DIR)/hashcheck-rc
-
+CXX ?= g++
+CXXFLAGS ?= -std=c++17 -O2 -Wall -Wextra -Wpedantic
+CPPFLAGS ?= -Isrc
+SOURCES := $(wildcard src/*.cpp)
+OBJECTS := $(patsubst src/%.cpp,obj/%.o,$(SOURCES))
+TARGET := bin/hashcheck-rc
+.PHONY: all clean test check
 all: $(TARGET)
-
-$(TARGET): $(OBJECTS) | $(BIN_DIR)
-	$(CXX) $(CXXFLAGS) -o $@ $^
-
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-$(OBJ_DIR):
-	mkdir -p $(OBJ_DIR)
-
-$(BIN_DIR):
-	mkdir -p $(BIN_DIR)
-
+$(TARGET): $(OBJECTS)
+	@mkdir -p bin
+	$(CXX) $(CXXFLAGS) $^ -o $@
+obj/%.o: src/%.cpp
+	@mkdir -p obj
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -MMD -MP -c $< -o $@
+-include $(OBJECTS:.o=.d)
+test: bin/detector_test
+	./bin/detector_test
+check: test
+bin/detector_test: tests/detector_test.cpp src/hashdetector.cpp src/HashDetector.h
+	@mkdir -p bin
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) tests/detector_test.cpp src/hashdetector.cpp -o $@
 clean:
-	rm -rf $(OBJ_DIR) $(TARGET)
-
-.PHONY: all clean
-
+	rm -rf obj bin
