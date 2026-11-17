@@ -16,11 +16,18 @@ obj/%.o: src/%.cpp
 test: bin/detector_test $(TARGET)
 	./bin/detector_test
 	$(MAKE) integration-test
-integration-test: $(TARGET)
-	python3 tests/integration_test.py $(TARGET)
+integration-test: $(TARGET) bin/integration_test bin/mock_hashcat
+	./bin/integration_test $(TARGET) ./bin/mock_hashcat
 check: test
 bin/detector_test: tests/detector_test.cpp src/hashdetector.cpp src/HashDetector.h
 	@mkdir -p bin
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) tests/detector_test.cpp src/hashdetector.cpp -o $@
 clean:
 	rm -rf obj bin
+
+bin/integration_test: tests/integration_test.cpp
+	@mkdir -p bin
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< -o $@
+bin/mock_hashcat: tests/mock_hashcat.cpp
+	@mkdir -p bin
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< -o $@

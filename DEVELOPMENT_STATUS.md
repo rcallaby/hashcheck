@@ -11,7 +11,7 @@
 
 ## Verification
 - C++ detector tests: run locally in this revision.
-- Python integration test syntax: checked locally.
+- Revision 3 historical verification: Python integration test syntax was checked locally; the Python tests were replaced in Revision 4.
 - Full application compilation/integration: **not verified** in this environment because RapidJSON development headers are absent.
 - Debian packaging workflow: **not executed** on GitHub Actions.
 - Windows/macOS: **not verified**.
@@ -23,3 +23,8 @@
 4. Implement and test a separate, signed APT repository publishing process if required.
 5. Validate Windows/macOS builds before advertising cross-platform support.
 6. Review command-line hash exposure and consider secure hash-file staging for sensitive use.
+
+## Revision 4 — Native C++ tests
+- Replaced Python integration runner and mock with C++17 equivalents.
+- Removed Python from build and CI dependencies.
+- Full application integration verification remains dependent on RapidJSON headers and a successful `make check`.
