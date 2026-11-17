@@ -1,7 +1,6 @@
 #include "HashDetector.h"
 #include <cassert>
 #include <string>
-
 int main() {
     HashDetector detector;
     int mode = 123;

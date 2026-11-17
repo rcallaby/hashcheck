@@ -1,28 +1,31 @@
 # Hashcheck
 
-Hashcheck is a C++17 command-line wrapper for Hashcat. It identifies a limited set of structured password-hash encodings, accepts an explicitly selected Hashcat mode, and launches Hashcat with an authorized wordlist. It does **not** reliably infer algorithms from raw hexadecimal digests: many hash algorithms produce identical-looking output.
+Hashcheck is a C++17 command-line wrapper for Hashcat. It recognizes selected structured hash encodings and invokes Hashcat with a configured wordlist. It **cannot** uniquely identify most raw hexadecimal digests. Only run password auditing against data you are authorized to test.
 
-## Requirements
+## Build
 
-- C++17 compiler and GNU Make
-- RapidJSON development headers (for example `rapidjson-dev` on Debian-based Linux)
-- Hashcat installed and accessible in `PATH`, or configured by absolute path
-- A wordlist you are authorized to use
+On Debian/Ubuntu:
 
-Build from the repository root with `make`. Run detector regression tests with `make test`. Run `make clean` to remove generated files.
+```sh
+sudo apt-get update
+sudo apt-get install -y g++ make python3 rapidjson-dev
+make clean && make check
+```
+
+`make check` builds the program, runs C++ detector tests and Python integration tests with a mock Hashcat executable; it does **not** require a GPU or a real Hashcat installation. For actual use, install Hashcat separately and provide an authorized wordlist. On Fedora, install `gcc-c++ make python3 rapidjson-devel` and run `make check`. The build and integration tests are primarily targeted at Linux; Windows and macOS builds have not been validated.
 
 ## Configuration
 
-Create a valid JSON file such as `config.json`:
+Create `config.json` (standard JSON; no comments):
 
 ```json
 {
   "hashcat_path": "hashcat",
-  "wordlist": "/path/to/authorized/wordlist.txt"
+  "wordlist": "/absolute/path/to/authorized-wordlist.txt"
 }
 ```
 
-JSON comments are not supported. Paths containing spaces are supported without shell quoting. Arbitrary shell options are deliberately not supported.
+The wordlist must exist and be a regular file. `hashcat_path` may be a command on PATH or an absolute executable path. The included `src/config.json` is a placeholder, not a ready-to-run configuration.
 
 ## Usage
 
@@ -32,18 +35,16 @@ JSON comments are not supported. Paths containing spaces are supported without s
 ./bin/hashcheck-rc -f hash.txt -c config.json --mode 1400
 ```
 
-`-i` supplies one hash directly; `-f` reads the first whitespace-delimited token from a file. `-c` supplies configuration. `--mode` selects the Hashcat mode. `--dry-run` displays the planned argument vector without running Hashcat. Structured bcrypt, MD5-crypt, SHA256-crypt, and SHA512-crypt hashes may be recognized automatically. Unrecognized or ambiguous inputs require `--mode`; selecting a mode is the user's responsibility.
+`-i HASH` accepts a single hash, `-f FILE` reads exactly one whitespace-delimited hash from a file, `-c CONFIG` selects configuration, `--mode NUMBER` specifies a Hashcat mode, and `--dry-run` prints the planned arguments without launching Hashcat. `-h`/`--help` displays usage. Duplicate `-c` or `--mode` arguments are errors.
 
-The application does not provide a graphical interface, interactive menu, hash validation against known plaintext, or guaranteed password recovery. It does not implement `-t`, `-w`, `-o`, or `--verbose`. The Hashcat executable performs the actual password recovery attempt. Hashcat failures are reported as errors.
+Supported automatic identification: bcrypt (`3200`), MD5-crypt (`500`), SHA256-crypt (`7400`), and SHA512-crypt (`1800`). Raw hexadecimal digests are ambiguous and require an explicit mode. An explicit mode does not prove the hash format is correct. Hashcat performs the recovery attempt, not Hashcheck. Nonzero Hashcat exit codes (including exhausted and aborted) are surfaced as nonzero program exits; do not interpret a zero exit as proof of password recovery without checking Hashcat output.
 
-## Safety and limitations
+## Security limitations
 
-Use only with hashes and systems you are authorized to audit. A hash's representation is not proof of its algorithm. Dry-run output includes the supplied hash; avoid sharing it if sensitive. Hashcat's own version-specific input formats and mode documentation remain authoritative. This application invokes Hashcat without a shell to avoid shell metacharacter interpretation.
+Hashcat receives arguments directly, not through a shell. The supplied hash is still visible in command-line process listings and dry-run output. Do not use Hashcheck for sensitive hashes on multi-user hosts without understanding this exposure. Hashes starting with `-`, containing NUL/newlines, or exceeding 16 KiB are rejected. This project does not implement a GUI, batch processing, or automatic verification of recovered passwords.
 
-## Testing
+## Packaging and CI
 
-`make test` builds and executes the hash detector regression suite without requiring Hashcat or RapidJSON. The full application requires RapidJSON. CI should run both tests and the full build on each pull request. Further end-to-end tests with a mocked Hashcat executable are recommended.
+`.github/workflows/build.yml` runs regression tests. `.github/workflows/release.yml` builds a Debian package artifact after testing; it **does not publish a GitHub release or update a signed APT repository**. Previous APT/RPM publication workflows are retained under `docs/legacy-workflows/` for reference only; they are intentionally disabled pending a secure packaging redesign. Package installation and Windows/macOS support still require validation.
 
-## License
-
-MIT; see `LICENSE`.
+See `DEVELOPMENT_STATUS.md` for verification limitations and remaining tasks. License: MIT (`LICENSE`).
